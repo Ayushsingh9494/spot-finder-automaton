@@ -1,12 +1,13 @@
 
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
+import { ParkingSpace, ReservationRequest } from '@/types/parking';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ParkingSpace, ReservationRequest } from '@/types/parking';
-import { MapPin, Clock, User, Car } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { MapPin, User, Clock, Car } from 'lucide-react';
 
 interface ReservationPanelProps {
   selectedSpace?: ParkingSpace;
@@ -23,93 +24,111 @@ const ReservationPanel: React.FC<ReservationPanelProps> = ({
   onFindNearestSpace,
   onUpdateOccupancy
 }) => {
-  const [reservedBy, setReservedBy] = useState('');
+  const [reservationName, setReservationName] = useState('');
   const [searchRow, setSearchRow] = useState(0);
   const [searchCol, setSearchCol] = useState(0);
-  const [preferredType, setPreferredType] = useState<string>('');
+  const [searchType, setSearchType] = useState<'regular' | 'disabled' | 'electric' | 'compact'>('regular');
 
-  const handleReserve = () => {
-    if (selectedSpace && reservedBy.trim()) {
-      onReserveSpace(selectedSpace.id, reservedBy.trim());
-      setReservedBy('');
+  const handleReserveSpace = () => {
+    if (selectedSpace && reservationName.trim()) {
+      onReserveSpace(selectedSpace.id, reservationName.trim());
+      setReservationName('');
+    }
+  };
+
+  const handleReleaseReservation = () => {
+    if (selectedSpace) {
+      onReleaseReservation(selectedSpace.id);
+    }
+  };
+
+  const handleToggleOccupancy = () => {
+    if (selectedSpace) {
+      onUpdateOccupancy(selectedSpace.id, !selectedSpace.isOccupied);
     }
   };
 
   const handleFindNearest = () => {
-    const request: ReservationRequest = {};
-    if (preferredType) {
-      request.spaceType = preferredType as any;
+    onFindNearestSpace(searchRow, searchCol, { spaceType: searchType });
+  };
+
+  const getSpaceTypeColor = (type: string) => {
+    switch (type) {
+      case 'electric': return 'bg-yellow-100 text-yellow-800';
+      case 'disabled': return 'bg-blue-100 text-blue-800';
+      case 'compact': return 'bg-purple-100 text-purple-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
-    onFindNearestSpace(searchRow, searchCol, request);
   };
 
   return (
     <div className="space-y-6">
       {/* Selected Space Info */}
-      {selectedSpace && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Car className="w-5 h-5" />
-              Space {selectedSpace.id}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <Label>Type</Label>
-                <p className="font-medium capitalize">{selectedSpace.spaceType}</p>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <MapPin className="w-5 h-5" />
+            Selected Space
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {selectedSpace ? (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <Label>Space ID</Label>
+                  <p className="font-medium">{selectedSpace.id}</p>
+                </div>
+                <div>
+                  <Label>Position</Label>
+                  <p className="font-medium">Row {selectedSpace.row}, Col {selectedSpace.col}</p>
+                </div>
+                <div>
+                  <Label>Type</Label>
+                  <Badge className={getSpaceTypeColor(selectedSpace.spaceType)}>
+                    {selectedSpace.spaceType}
+                  </Badge>
+                </div>
+                <div>
+                  <Label>Status</Label>
+                  <Badge variant={selectedSpace.isOccupied ? 'destructive' : selectedSpace.isReserved ? 'secondary' : 'default'}>
+                    {selectedSpace.isOccupied ? 'Occupied' : selectedSpace.isReserved ? 'Reserved' : 'Available'}
+                  </Badge>
+                </div>
               </div>
-              <div>
-                <Label>Status</Label>
-                <p className={`font-medium ${
-                  selectedSpace.isOccupied ? 'text-red-600' : 
-                  selectedSpace.isReserved ? 'text-yellow-600' : 'text-green-600'
-                }`}>
-                  {selectedSpace.isOccupied ? 'Occupied' : 
-                   selectedSpace.isReserved ? 'Reserved' : 'Available'}
-                </p>
-              </div>
-            </div>
 
-            {selectedSpace.isReserved && selectedSpace.reservedBy && (
-              <div>
-                <Label>Reserved by</Label>
-                <p className="font-medium">{selectedSpace.reservedBy}</p>
-              </div>
-            )}
-
-            <div className="space-y-2">
-              {!selectedSpace.isOccupied && !selectedSpace.isReserved && (
-                <div className="space-y-2">
-                  <Label htmlFor="reservedBy">Reserve for:</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="reservedBy"
-                      placeholder="Enter name or license plate"
-                      value={reservedBy}
-                      onChange={(e) => setReservedBy(e.target.value)}
-                    />
-                    <Button onClick={handleReserve} disabled={!reservedBy.trim()}>
-                      Reserve
-                    </Button>
-                  </div>
+              {selectedSpace.isReserved && selectedSpace.reservedBy && (
+                <div>
+                  <Label>Reserved By</Label>
+                  <p className="font-medium flex items-center gap-2">
+                    <User className="w-4 h-4" />
+                    {selectedSpace.reservedBy}
+                  </p>
                 </div>
               )}
 
-              {selectedSpace.isReserved && (
-                <Button 
-                  onClick={() => onReleaseReservation(selectedSpace.id)}
-                  variant="outline"
-                  className="w-full"
-                >
-                  Release Reservation
-                </Button>
-              )}
-
               <div className="flex gap-2">
-                <Button
-                  onClick={() => onUpdateOccupancy(selectedSpace.id, !selectedSpace.isOccupied)}
+                {!selectedSpace.isOccupied && !selectedSpace.isReserved && (
+                  <div className="flex-1 space-y-2">
+                    <Input
+                      placeholder="Enter your name"
+                      value={reservationName}
+                      onChange={(e) => setReservationName(e.target.value)}
+                    />
+                    <Button onClick={handleReserveSpace} disabled={!reservationName.trim()} className="w-full">
+                      Reserve Space
+                    </Button>
+                  </div>
+                )}
+
+                {selectedSpace.isReserved && (
+                  <Button onClick={handleReleaseReservation} variant="outline" className="flex-1">
+                    Release Reservation
+                  </Button>
+                )}
+
+                <Button 
+                  onClick={handleToggleOccupancy} 
                   variant={selectedSpace.isOccupied ? "destructive" : "default"}
                   className="flex-1"
                 >
@@ -117,36 +136,42 @@ const ReservationPanel: React.FC<ReservationPanelProps> = ({
                 </Button>
               </div>
             </div>
-          </CardContent>
-        </Card>
-      )}
+          ) : (
+            <p className="text-gray-500 text-center py-8">
+              Click on a parking space to view details
+            </p>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Find Nearest Space */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <MapPin className="w-5 h-5" />
+            <Car className="w-5 h-5" />
             Find Nearest Space
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="searchRow">Start Row</Label>
+              <Label htmlFor="search-row">Starting Row</Label>
               <Input
-                id="searchRow"
+                id="search-row"
                 type="number"
                 min="0"
+                max="7"
                 value={searchRow}
                 onChange={(e) => setSearchRow(parseInt(e.target.value) || 0)}
               />
             </div>
             <div>
-              <Label htmlFor="searchCol">Start Column</Label>
+              <Label htmlFor="search-col">Starting Column</Label>
               <Input
-                id="searchCol"
+                id="search-col"
                 type="number"
                 min="0"
+                max="11"
                 value={searchCol}
                 onChange={(e) => setSearchCol(parseInt(e.target.value) || 0)}
               />
@@ -154,17 +179,16 @@ const ReservationPanel: React.FC<ReservationPanelProps> = ({
           </div>
 
           <div>
-            <Label>Preferred Type</Label>
-            <Select value={preferredType} onValueChange={setPreferredType}>
+            <Label htmlFor="space-type">Preferred Space Type</Label>
+            <Select value={searchType} onValueChange={(value: any) => setSearchType(value)}>
               <SelectTrigger>
-                <SelectValue placeholder="Any type" />
+                <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Any type</SelectItem>
                 <SelectItem value="regular">Regular</SelectItem>
-                <SelectItem value="compact">Compact</SelectItem>
                 <SelectItem value="electric">Electric</SelectItem>
                 <SelectItem value="disabled">Disabled</SelectItem>
+                <SelectItem value="compact">Compact</SelectItem>
               </SelectContent>
             </Select>
           </div>
