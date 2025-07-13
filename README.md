@@ -1,73 +1,138 @@
-# Welcome to your Lovable project
+# Smart Parking Management System - Python/HTML/CSS Version
 
-## Project info
+A comprehensive parking management system built with Python Flask backend and HTML/CSS/JavaScript frontend.
 
-**URL**: https://lovable.dev/projects/d9411220-406b-4b67-8218-3ba71dfee060
+## Features
 
-## How can I edit this code?
+- **Real-time Parking Grid**: Visual representation of parking spaces with different states
+- **Space Reservation**: Reserve and release parking spaces
+- **Smart Search**: Find nearest available space using BFS algorithm
+- **Analytics Dashboard**: Real-time statistics and occupancy tracking
+- **Space Types**: Support for regular, disabled, electric, and compact spaces
+- **Optimization Recommendations**: AI-powered suggestions for better space allocation
 
-There are several ways of editing your application.
+## Technology Stack
 
-**Use Lovable**
+- **Backend**: Python Flask
+- **Frontend**: HTML5, CSS3, JavaScript (ES6)
+- **Algorithms**: Graph traversal (BFS), Hash Maps for O(1) lookups
+- **Styling**: CSS Grid, Flexbox, Responsive design
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/d9411220-406b-4b67-8218-3ba71dfee060) and start prompting.
+## Installation & Setup
 
-Changes made via Lovable will be committed automatically to this repo.
+1. **Install Python dependencies**:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-**Use your preferred IDE**
+2. **Run the Flask application**:
+   ```bash
+   python app.py
+   ```
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+3. **Open your browser**:
+   Navigate to `http://localhost:5000`
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+## Project Structure
 
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+```
+├── app.py                 # Main Flask application
+├── parking_manager.py     # Core parking algorithms and logic
+├── templates/
+│   └── index.html        # Main HTML template
+├── static/
+│   ├── style.css         # All CSS styling
+│   └── script.js         # Frontend JavaScript
+├── requirements.txt      # Python dependencies
+└── README.md            # This file
 ```
 
-**Edit a file directly in GitHub**
+## API Endpoints
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+- `GET /` - Main page
+- `GET /api/parking-lot` - Get current parking lot state
+- `GET /api/analytics` - Get parking analytics
+- `POST /api/reserve-space` - Reserve a parking space
+- `POST /api/release-reservation` - Release a reservation
+- `POST /api/update-occupancy` - Update space occupancy
+- `POST /api/find-nearest` - Find nearest available space
+- `GET /api/recommendations` - Get optimization recommendations
 
-**Use GitHub Codespaces**
+## Core Algorithms
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+### 1. Breadth-First Search (BFS)
+- **Purpose**: Find nearest available parking space
+- **Time Complexity**: O(V + E) where V is vertices (spaces) and E is edges
+- **Implementation**: Uses adjacency list for graph representation
 
-## What technologies are used for this project?
+### 2. Hash Map Operations
+- **Purpose**: O(1) space lookups and updates
+- **Time Complexity**: O(1) for reserve, release, and status updates
+- **Data Structure**: Python dictionary for space storage
 
-This project is built with:
+### 3. Space Allocation Algorithm
+- **Purpose**: Optimize parking lot utilization
+- **Features**: Analyzes occupancy patterns and provides recommendations
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## Features Explained
 
-## How can I deploy this project?
+### Parking Space Types
+- **Regular**: Standard parking spaces
+- **Disabled**: Accessibility-compliant spaces
+- **Electric**: EV charging stations
+- **Compact**: Smaller vehicles only
 
-Simply open [Lovable](https://lovable.dev/projects/d9411220-406b-4b67-8218-3ba71dfee060) and click on Share -> Publish.
+### Space States
+- **Available**: Ready for use
+- **Occupied**: Currently in use
+- **Reserved**: Temporarily held
+- **Highlighted**: Found by search algorithm
 
-## Can I connect a custom domain to my Lovable project?
+### Analytics
+- Real-time occupancy statistics
+- Peak hour analysis
+- Space type distribution
+- Optimization recommendations
 
-Yes, you can!
+## Usage Guide
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+1. **Finding Spaces**: Use the "Find Nearest Space" panel to locate available spots
+2. **Reservations**: Enter space ID and name to reserve/release spaces
+3. **Occupancy**: Toggle space occupancy status
+4. **Analytics**: Monitor real-time statistics and recommendations
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+## Development Notes
+
+### Key Design Decisions
+- **Graph Representation**: Adjacency list for efficient BFS traversal
+- **State Management**: Centralized in Python backend
+- **API Design**: RESTful endpoints for clear separation of concerns
+- **Responsive UI**: Mobile-first CSS design
+
+### Performance Optimizations
+- **O(1) Space Operations**: Hash map for instant lookups
+- **Efficient Search**: BFS with early termination
+- **Auto-refresh**: 30-second intervals for real-time updates
+- **Minimal DOM Updates**: Targeted element updates
+
+## Comparison with React/TypeScript Version
+
+| Feature | Python/HTML/CSS | React/TypeScript |
+|---------|-----------------|------------------|
+| Performance | Server-side processing | Client-side processing |
+| Complexity | Simpler architecture | More modern but complex |
+| Real-time Updates | API polling | State management |
+| Deployment | Traditional web hosting | Modern deployment |
+| Learning Curve | Easier for beginners | Requires modern JS knowledge |
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
+
+## License
+
+MIT License - feel free to use for educational purposes.

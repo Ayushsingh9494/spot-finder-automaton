@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Parking Management System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1><i class="fas fa-car"></i> Smart Parking Management System</h1>
+            <p>Intelligent parking space allocation and management</p>
+        </header>
+
+        <div class="main-content">
+            <!-- Control Panel -->
+            <div class="control-panel">
+                <div class="panel-section">
+                    <h3><i class="fas fa-search"></i> Find Nearest Space</h3>
+                    <div class="form-group">
+                        <label for="startRow">Start Row:</label>
+                        <input type="number" id="startRow" value="0" min="0" max="7">
+                    </div>
+                    <div class="form-group">
+                        <label for="startCol">Start Column:</label>
+                        <input type="number" id="startCol" value="0" min="0" max="11">
+                    </div>
+                    <div class="form-group">
+                        <label for="spaceType">Space Type:</label>
+                        <select id="spaceType">
+                            <option value="">Any</option>
+                            <option value="regular">Regular</option>
+                            <option value="disabled">Disabled</option>
+                            <option value="electric">Electric</option>
+                            <option value="compact">Compact</option>
+                        </select>
+                    </div>
+                    <button onclick="findNearestSpace()" class="btn btn-primary">Find Space</button>
+                </div>
+
+                <div class="panel-section">
+                    <h3><i class="fas fa-calendar-check"></i> Reserve Space</h3>
+                    <div class="form-group">
+                        <label for="reserveSpaceId">Space ID:</label>
+                        <input type="text" id="reserveSpaceId" placeholder="e.g., 2-5">
+                    </div>
+                    <div class="form-group">
+                        <label for="reservedBy">Reserved By:</label>
+                        <input type="text" id="reservedBy" value="User" placeholder="Name">
+                    </div>
+                    <button onclick="reserveSpace()" class="btn btn-success">Reserve</button>
+                    <button onclick="releaseReservation()" class="btn btn-warning">Release</button>
+                </div>
+
+                <div class="panel-section">
+                    <h3><i class="fas fa-toggle-on"></i> Toggle Occupancy</h3>
+                    <div class="form-group">
+                        <label for="occupancySpaceId">Space ID:</label>
+                        <input type="text" id="occupancySpaceId" placeholder="e.g., 3-7">
+                    </div>
+                    <button onclick="toggleOccupancy(true)" class="btn btn-danger">Mark Occupied</button>
+                    <button onclick="toggleOccupancy(false)" class="btn btn-success">Mark Available</button>
+                </div>
+            </div>
+
+            <!-- Parking Lot Grid -->
+            <div class="parking-lot-container">
+                <h3><i class="fas fa-th-large"></i> Parking Lot Layout</h3>
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="space-sample available"></div>
+                        <span>Available</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="space-sample occupied"></div>
+                        <span>Occupied</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="space-sample reserved"></div>
+                        <span>Reserved</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="space-sample highlighted"></div>
+                        <span>Found Space</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="space-sample disabled"></div>
+                        <span>Disabled</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="space-sample electric"></div>
+                        <span>Electric</span>
+                    </div>
+                </div>
+                <div id="parkingGrid" class="parking-grid"></div>
+            </div>
+        </div>
+
+        <!-- Analytics Dashboard -->
+        <div class="analytics-dashboard">
+            <h3><i class="fas fa-chart-bar"></i> Analytics Dashboard</h3>
+            <div class="analytics-grid">
+                <div class="stat-card">
+                    <h4>Total Spaces</h4>
+                    <span id="totalSpaces" class="stat-value">0</span>
+                </div>
+                <div class="stat-card">
+                    <h4>Occupied</h4>
+                    <span id="occupiedSpaces" class="stat-value">0</span>
+                </div>
+                <div class="stat-card">
+                    <h4>Reserved</h4>
+                    <span id="reservedSpaces" class="stat-value">0</span>
+                </div>
+                <div class="stat-card">
+                    <h4>Available</h4>
+                    <span id="availableSpaces" class="stat-value">0</span>
+                </div>
+                <div class="stat-card">
+                    <h4>Occupancy Rate</h4>
+                    <span id="occupancyRate" class="stat-value">0%</span>
+                </div>
+            </div>
+            
+            <div class="recommendations">
+                <h4><i class="fas fa-lightbulb"></i> Optimization Recommendations</h4>
+                <ul id="recommendationsList"></ul>
+            </div>
+        </div>
+
+        <!-- Messages -->
+        <div id="messageContainer" class="message-container"></div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
