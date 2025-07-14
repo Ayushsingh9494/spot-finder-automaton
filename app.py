@@ -1,11 +1,18 @@
 from flask import Flask, render_template, request, jsonify
 from parking_manager import ParkingManager
 import json
+import sys
+import os
 
 app = Flask(__name__)
 
 # Initialize parking manager
 parking_manager = ParkingManager(rows=8, cols=12)
+
+@app.route('/health')
+def health_check():
+    """Health check endpoint"""
+    return jsonify({'status': 'healthy', 'message': 'Parking Management System is running'})
 
 @app.route('/')
 def index():
@@ -82,4 +89,30 @@ def get_recommendations():
     return jsonify({'recommendations': recommendations})
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    try:
+        print("=" * 60)
+        print("🚗 SMART PARKING MANAGEMENT SYSTEM 🚗")
+        print("=" * 60)
+        print(f"✅ Server starting...")
+        print(f"✅ Flask app initialized successfully")
+        print(f"✅ Parking manager ready (8x12 grid)")
+        print("-" * 60)
+        print(f"🌐 Open your browser and go to:")
+        print(f"   http://localhost:5000")
+        print(f"   http://127.0.0.1:5000")
+        print("-" * 60)
+        print(f"🔧 Health check available at: http://localhost:5000/health")
+        print(f"📊 API endpoints ready")
+        print("=" * 60)
+        print("Press Ctrl+C to stop the server")
+        print("=" * 60)
+        
+        app.run(debug=True, port=5000, host='0.0.0.0')
+        
+    except ImportError as e:
+        print(f"❌ Error: Missing required module - {e}")
+        print("💡 Please run: pip install -r requirements.txt")
+        sys.exit(1)
+    except Exception as e:
+        print(f"❌ Error starting server: {e}")
+        sys.exit(1)
