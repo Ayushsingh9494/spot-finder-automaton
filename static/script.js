@@ -1,66 +1,45 @@
+
 // Global variables
-let currentParkingLot = null;
-let highlightedSpaceId = null;
+let parkingData = {};
+let highlightedSpace = null;
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', function() {
-    loadParkingLot();
+    loadParkingData();
     loadAnalytics();
-    loadRecommendations();
+    setInterval(loadParkingData, 5000); // Refresh every 5 seconds
 });
 
-// API helper function
-async function apiCall(endpoint, method = 'GET', data = null) {
-    try {
-        const options = {
-            method: method,
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        };
-        
-        if (data) {
-            options.body = JSON.stringify(data);
-        }
-        
-        const response = await fetch(`/api${endpoint}`, options);
-        return await response.json();
-    } catch (error) {
-        console.error('API call failed:', error);
-        showMessage('Network error occurred', 'error');
-        return null;
-    }
-}
-
 // Load parking lot data
-async function loadParkingLot() {
-    const data = await apiCall('/parking-lot');
-    if (data) {
-        currentParkingLot = data;
-        renderParkingGrid(data.spaces);
+async function loadParkingData() {
+    try {
+        const response = await fetch('/api/parking-lot');
+        parkingData = await response.json();
+        renderParkingGrid();
+        updateSpaceStats();
+    } catch (error) {
+        console.error('Error loading parking data:', error);
+        showMessage('Error loading parking data', 'error');
     }
 }
 
 // Load analytics data
 async function loadAnalytics() {
-    const data = await apiCall('/analytics');
-    if (data) {
-        updateAnalyticsDisplay(data);
-    }
-}
-
-// Load recommendations
-async function loadRecommendations() {
-    const data = await apiCall('/recommendations');
-    if (data) {
-        updateRecommendations(data.recommendations);
+    try {
+        const response = await fetch('/api/analytics');
+        const analytics = await response.json();
+        updateAnalyticsDashboard(analytics);
+    } catch (error) {
+        console.error('Error loading analytics:', error);
     }
 }
 
 // Render parking grid
-function renderParkingGrid(spaces) {
+function renderParkingGrid() {
     const grid = document.getElementById('parkingGrid');
     grid.innerHTML = '';
+    
+    const spaces = parkingData.spaces || [];
     
     spaces.forEach(space => {
         const spaceElement = document.createElement('div');
@@ -68,7 +47,7 @@ function renderParkingGrid(spaces) {
         spaceElement.id = `space-${space.id}`;
         spaceElement.textContent = space.id;
         
-        // Add space state classes
+        // Add status classes
         if (space.isOccupied) {
             spaceElement.classList.add('occupied');
         } else if (space.isReserved) {
@@ -78,181 +57,223 @@ function renderParkingGrid(spaces) {
         }
         
         // Add space type classes
-        spaceElement.classList.add(space.spaceType);
+        if (space.spaceType !== 'regular') {
+            spaceElement.classList.add(space.spaceType);
+        }
         
         // Add click handler
-        spaceElement.addEventListener('click', () => selectSpace(space));
+        spaceElement.addEventListener('click', () => selectSpace(space.id));
         
         grid.appendChild(spaceElement);
     });
 }
 
-// Select a space
-function selectSpace(space) {
-    // Update form fields
-    document.getElementById('reserveSpaceId').value = space.id;
-    document.getElementById('occupancySpaceId').value = space.id;
+// Select a parking space
+function selectSpace(spaceId) {
+    // Remove previous highlight
+    if (highlightedSpace) {
+        document.getElementById(`space-${highlightedSpace}`).classList.remove('highlighted');
+    }
     
-    // Show space info
-    showMessage(`Selected space ${space.id} (${space.spaceType})`, 'info');
+    // Highlight new space
+    const spaceElement = document.getElementById(`space-${spaceId}`);
+    spaceElement.classList.add('highlighted');
+    highlightedSpace = spaceId;
+    
+    // Update form fields
+    document.getElementById('reserveSpaceId').value = spaceId;
+    document.getElementById('occupancySpaceId').value = spaceId;
+    
+    showMessage(`Selected space: ${spaceId}`, 'info');
 }
 
-// Find nearest space
+// Update space statistics
+function updateSpaceStats() {
+    const spaces = parkingData.spaces || [];
+    const totalSpaces = spaces.length;
+    const occupiedSpaces = spaces.filter(s => s.isOccupied).length;
+    const reservedSpaces = spaces.filter(s => s.isReserved).length;
+    const availableSpaces = totalSpaces - occupiedSpaces - reservedSpaces;
+    const occupancyRate = ((occupiedSpaces / totalSpaces) * 100).toFixed(1);
+    
+    document.getElementById('totalSpaces').textContent = totalSpaces;
+    document.getElementById('occupiedSpaces').textContent = occupiedSpaces;
+    document.getElementById('reservedSpaces').textContent = reservedSpaces;
+    document.getElementById('availableSpaces').textContent = availableSpaces;
+    document.getElementById('occupancyRate').textContent = `${occupancyRate}%`;
+}
+
+// Update analytics dashboard
+function updateAnalyticsDashboard(analytics) {
+    loadRecommendations();
+}
+
+// Find nearest available space
 async function findNearestSpace() {
-    const row = parseInt(document.getElementById('startRow').value);
-    const col = parseInt(document.getElementById('startCol').value);
-    const spaceType = document.getElementById('spaceType').value;
+    const startRow = parseInt(document.getElementById('startRow').value) || 0;
+    const startCol = parseInt(document.getElementById('startCol').value) || 0;
+    const spaceType = document.getElementById('spaceType').value || null;
     
-    const data = await apiCall('/find-nearest', 'POST', {
-        row: row,
-        col: col,
-        space_type: spaceType || null
-    });
-    
-    if (data) {
-        if (data.success) {
-            highlightSpace(data.space.id);
-            showMessage(data.message, 'success');
+    try {
+        const response = await fetch('/api/find-nearest', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                row: startRow,
+                col: startCol,
+                space_type: spaceType
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success && result.space) {
+            selectSpace(result.space.id);
+            showMessage(result.message, 'success');
         } else {
-            clearHighlight();
-            showMessage(data.message, 'error');
+            showMessage(result.message, 'error');
         }
+    } catch (error) {
+        console.error('Error finding nearest space:', error);
+        showMessage('Error finding nearest space', 'error');
     }
 }
 
-// Reserve space
+// Reserve a parking space
 async function reserveSpace() {
-    const spaceId = document.getElementById('reserveSpaceId').value.trim();
-    const reservedBy = document.getElementById('reservedBy').value.trim();
+    const spaceId = document.getElementById('reserveSpaceId').value;
+    const reservedBy = document.getElementById('reservedBy').value;
     
-    if (!spaceId) {
-        showMessage('Please enter a space ID', 'error');
+    if (!spaceId || !reservedBy) {
+        showMessage('Please enter space ID and name', 'error');
         return;
     }
     
-    const data = await apiCall('/reserve-space', 'POST', {
-        space_id: spaceId,
-        reserved_by: reservedBy || 'User'
-    });
-    
-    if (data) {
-        showMessage(data.message, data.success ? 'success' : 'error');
-        if (data.success) {
-            await refreshData();
+    try {
+        const response = await fetch('/api/reserve-space', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                space_id: spaceId,
+                reserved_by: reservedBy
+            })
+        });
+        
+        const result = await response.json();
+        showMessage(result.message, result.success ? 'success' : 'error');
+        
+        if (result.success) {
+            loadParkingData();
+            document.getElementById('reservedBy').value = '';
         }
+    } catch (error) {
+        console.error('Error reserving space:', error);
+        showMessage('Error reserving space', 'error');
     }
 }
 
 // Release reservation
 async function releaseReservation() {
-    const spaceId = document.getElementById('reserveSpaceId').value.trim();
+    const spaceId = document.getElementById('reserveSpaceId').value;
     
     if (!spaceId) {
-        showMessage('Please enter a space ID', 'error');
+        showMessage('Please enter space ID', 'error');
         return;
     }
     
-    const data = await apiCall('/release-reservation', 'POST', {
-        space_id: spaceId
-    });
-    
-    if (data) {
-        showMessage(data.message, data.success ? 'success' : 'error');
-        if (data.success) {
-            await refreshData();
+    try {
+        const response = await fetch('/api/release-reservation', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                space_id: spaceId
+            })
+        });
+        
+        const result = await response.json();
+        showMessage(result.message, result.success ? 'success' : 'error');
+        
+        if (result.success) {
+            loadParkingData();
         }
+    } catch (error) {
+        console.error('Error releasing reservation:', error);
+        showMessage('Error releasing reservation', 'error');
     }
 }
 
-// Toggle occupancy
+// Toggle space occupancy
 async function toggleOccupancy(isOccupied) {
-    const spaceId = document.getElementById('occupancySpaceId').value.trim();
+    const spaceId = document.getElementById('occupancySpaceId').value;
     
     if (!spaceId) {
-        showMessage('Please enter a space ID', 'error');
+        showMessage('Please enter space ID', 'error');
         return;
     }
     
-    const data = await apiCall('/update-occupancy', 'POST', {
-        space_id: spaceId,
-        is_occupied: isOccupied
-    });
-    
-    if (data) {
-        showMessage(data.message, data.success ? 'success' : 'error');
-        if (data.success) {
-            await refreshData();
+    try {
+        const response = await fetch('/api/update-occupancy', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                space_id: spaceId,
+                is_occupied: isOccupied
+            })
+        });
+        
+        const result = await response.json();
+        showMessage(result.message, result.success ? 'success' : 'error');
+        
+        if (result.success) {
+            loadParkingData();
         }
+    } catch (error) {
+        console.error('Error updating occupancy:', error);
+        showMessage('Error updating occupancy', 'error');
     }
 }
 
-// Highlight a space
-function highlightSpace(spaceId) {
-    clearHighlight();
-    const spaceElement = document.getElementById(`space-${spaceId}`);
-    if (spaceElement) {
-        spaceElement.classList.add('highlighted');
-        highlightedSpaceId = spaceId;
+// Load optimization recommendations
+async function loadRecommendations() {
+    try {
+        const response = await fetch('/api/recommendations');
+        const data = await response.json();
+        
+        const recommendationsList = document.getElementById('recommendationsList');
+        recommendationsList.innerHTML = '';
+        
+        data.recommendations.forEach(recommendation => {
+            const li = document.createElement('li');
+            li.textContent = recommendation;
+            recommendationsList.appendChild(li);
+        });
+    } catch (error) {
+        console.error('Error loading recommendations:', error);
     }
 }
 
-// Clear highlight
-function clearHighlight() {
-    if (highlightedSpaceId) {
-        const spaceElement = document.getElementById(`space-${highlightedSpaceId}`);
-        if (spaceElement) {
-            spaceElement.classList.remove('highlighted');
-        }
-        highlightedSpaceId = null;
-    }
-}
-
-// Update analytics display
-function updateAnalyticsDisplay(analytics) {
-    document.getElementById('totalSpaces').textContent = analytics.totalSpaces;
-    document.getElementById('occupiedSpaces').textContent = analytics.occupiedSpaces;
-    document.getElementById('reservedSpaces').textContent = analytics.reservedSpaces;
-    document.getElementById('availableSpaces').textContent = analytics.availableSpaces;
-    document.getElementById('occupancyRate').textContent = `${analytics.occupancyRate}%`;
-}
-
-// Update recommendations
-function updateRecommendations(recommendations) {
-    const list = document.getElementById('recommendationsList');
-    list.innerHTML = '';
-    
-    recommendations.forEach(recommendation => {
-        const li = document.createElement('li');
-        li.textContent = recommendation;
-        list.appendChild(li);
-    });
-}
-
-// Show message
+// Show message to user
 function showMessage(message, type = 'info') {
-    const container = document.getElementById('messageContainer');
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `message ${type}`;
-    messageDiv.textContent = message;
+    const messageContainer = document.getElementById('messageContainer');
     
-    container.appendChild(messageDiv);
+    const messageElement = document.createElement('div');
+    messageElement.className = `message ${type}`;
+    messageElement.textContent = message;
     
-    // Auto remove after 5 seconds
+    messageContainer.appendChild(messageElement);
+    
+    // Remove message after 3 seconds
     setTimeout(() => {
-        if (messageDiv.parentNode) {
-            messageDiv.parentNode.removeChild(messageDiv);
+        if (messageElement.parentNode) {
+            messageElement.parentNode.removeChild(messageElement);
         }
-    }, 5000);
+    }, 3000);
 }
-
-// Refresh all data
-async function refreshData() {
-    await Promise.all([
-        loadParkingLot(),
-        loadAnalytics(),
-        loadRecommendations()
-    ]);
-}
-
-// Auto refresh every 30 seconds
-setInterval(refreshData, 30000);
