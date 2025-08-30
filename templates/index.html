@@ -5,133 +5,129 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smart Parking Management System</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
     <div class="container">
-        <header class="header">
+        <header>
             <h1><i class="fas fa-car"></i> Smart Parking Management System</h1>
-            <p>Intelligent parking space allocation and management</p>
+            <p>Real-time parking space management with intelligent algorithms</p>
         </header>
 
-        <div class="main-content">
-            <!-- Control Panel -->
-            <div class="control-panel">
-                <div class="panel-section">
-                    <h3><i class="fas fa-search"></i> Find Nearest Space</h3>
-                    <div class="form-group">
-                        <label for="startRow">Start Row:</label>
-                        <input type="number" id="startRow" value="0" min="0" max="7">
-                    </div>
-                    <div class="form-group">
-                        <label for="startCol">Start Column:</label>
-                        <input type="number" id="startCol" value="0" min="0" max="11">
-                    </div>
-                    <div class="form-group">
-                        <label for="spaceType">Space Type:</label>
-                        <select id="spaceType">
-                            <option value="">Any</option>
-                            <option value="regular">Regular</option>
-                            <option value="disabled">Disabled</option>
-                            <option value="electric">Electric</option>
-                            <option value="compact">Compact</option>
-                        </select>
-                    </div>
-                    <button onclick="findNearestSpace()" class="btn btn-primary">Find Space</button>
+        <div class="control-panel">
+            <div class="panel-section">
+                <h3><i class="fas fa-search"></i> Find Parking</h3>
+                <div class="form-group">
+                    <label>Start Position:</label>
+                    <input type="number" id="findRow" placeholder="Row" min="0" max="7" value="0">
+                    <input type="number" id="findCol" placeholder="Col" min="0" max="11" value="0">
                 </div>
-
-                <div class="panel-section">
-                    <h3><i class="fas fa-calendar-check"></i> Reserve Space</h3>
-                    <div class="form-group">
-                        <label for="reserveSpaceId">Space ID:</label>
-                        <input type="text" id="reserveSpaceId" placeholder="e.g., 2-5">
-                    </div>
-                    <div class="form-group">
-                        <label for="reservedBy">Reserved By:</label>
-                        <input type="text" id="reservedBy" value="User" placeholder="Name">
-                    </div>
-                    <button onclick="reserveSpace()" class="btn btn-success">Reserve</button>
-                    <button onclick="releaseReservation()" class="btn btn-warning">Release</button>
+                <div class="form-group">
+                    <label>Space Type:</label>
+                    <select id="findSpaceType">
+                        <option value="">Any</option>
+                        <option value="regular">Regular</option>
+                        <option value="disabled">Disabled</option>
+                        <option value="electric">Electric</option>
+                        <option value="compact">Compact</option>
+                    </select>
                 </div>
-
-                <div class="panel-section">
-                    <h3><i class="fas fa-toggle-on"></i> Toggle Occupancy</h3>
-                    <div class="form-group">
-                        <label for="occupancySpaceId">Space ID:</label>
-                        <input type="text" id="occupancySpaceId" placeholder="e.g., 3-7">
-                    </div>
-                    <button onclick="toggleOccupancy(true)" class="btn btn-danger">Mark Occupied</button>
-                    <button onclick="toggleOccupancy(false)" class="btn btn-success">Mark Available</button>
-                </div>
+                <button onclick="findNearestSpace()" class="btn btn-primary">
+                    <i class="fas fa-search"></i> Find Space
+                </button>
             </div>
 
-            <!-- Parking Lot Grid -->
-            <div class="parking-lot-container">
-                <h3><i class="fas fa-th-large"></i> Parking Lot Layout</h3>
-                <div class="legend">
-                    <div class="legend-item">
-                        <div class="space-sample available"></div>
-                        <span>Available</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="space-sample occupied"></div>
-                        <span>Occupied</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="space-sample reserved"></div>
-                        <span>Reserved</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="space-sample highlighted"></div>
-                        <span>Found Space</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="space-sample disabled"></div>
-                        <span>Disabled</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="space-sample electric"></div>
-                        <span>Electric</span>
-                    </div>
+            <div class="panel-section">
+                <h3><i class="fas fa-calendar-check"></i> Reserve Space</h3>
+                <div class="form-group">
+                    <input type="text" id="reserveSpaceId" placeholder="Space ID (e.g., 3-7)">
+                    <input type="text" id="reservedBy" placeholder="Reserved by">
                 </div>
+                <button onclick="reserveSpace()" class="btn btn-success">
+                    <i class="fas fa-lock"></i> Reserve
+                </button>
+                <button onclick="releaseReservation()" class="btn btn-warning">
+                    <i class="fas fa-unlock"></i> Release
+                </button>
+            </div>
+
+            <div class="panel-section">
+                <h3><i class="fas fa-toggle-on"></i> Toggle Occupancy</h3>
+                <div class="form-group">
+                    <input type="text" id="toggleSpaceId" placeholder="Space ID (e.g., 3-7)">
+                </div>
+                <button onclick="toggleOccupancy()" class="btn btn-primary">
+                    <i class="fas fa-exchange-alt"></i> Toggle
+                </button>
+            </div>
+        </div>
+
+        <div class="parking-lot-container">
+            <div class="legend">
+                <h3>Legend</h3>
+                <div class="legend-items">
+                    <span class="legend-item"><div class="space available"></div> Available</span>
+                    <span class="legend-item"><div class="space occupied"></div> Occupied</span>
+                    <span class="legend-item"><div class="space reserved"></div> Reserved</span>
+                    <span class="legend-item"><div class="space highlighted"></div> Highlighted</span>
+                    <span class="legend-item"><div class="space disabled"></div> Disabled</span>
+                    <span class="legend-item"><div class="space electric"></div> Electric</span>
+                </div>
+            </div>
+            
+            <div class="parking-grid-wrapper">
+                <h3><i class="fas fa-th"></i> Parking Lot Grid (8x12)</h3>
                 <div id="parkingGrid" class="parking-grid"></div>
             </div>
         </div>
 
-        <!-- Analytics Dashboard -->
-        <div class="analytics-dashboard">
+        <div class="analytics-container">
             <h3><i class="fas fa-chart-bar"></i> Analytics Dashboard</h3>
             <div class="analytics-grid">
                 <div class="stat-card">
-                    <h4>Total Spaces</h4>
-                    <span id="totalSpaces" class="stat-value">0</span>
+                    <div class="stat-icon"><i class="fas fa-car"></i></div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="totalSpaces">0</div>
+                        <div class="stat-label">Total Spaces</div>
+                    </div>
                 </div>
                 <div class="stat-card">
-                    <h4>Occupied</h4>
-                    <span id="occupiedSpaces" class="stat-value">0</span>
+                    <div class="stat-icon occupied"><i class="fas fa-car"></i></div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="occupiedSpaces">0</div>
+                        <div class="stat-label">Occupied</div>
+                    </div>
                 </div>
                 <div class="stat-card">
-                    <h4>Reserved</h4>
-                    <span id="reservedSpaces" class="stat-value">0</span>
+                    <div class="stat-icon reserved"><i class="fas fa-lock"></i></div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="reservedSpaces">0</div>
+                        <div class="stat-label">Reserved</div>
+                    </div>
                 </div>
                 <div class="stat-card">
-                    <h4>Available</h4>
-                    <span id="availableSpaces" class="stat-value">0</span>
+                    <div class="stat-icon available"><i class="fas fa-check-circle"></i></div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="availableSpaces">0</div>
+                        <div class="stat-label">Available</div>
+                    </div>
                 </div>
                 <div class="stat-card">
-                    <h4>Occupancy Rate</h4>
-                    <span id="occupancyRate" class="stat-value">0%</span>
+                    <div class="stat-icon"><i class="fas fa-percentage"></i></div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="occupancyRate">0%</div>
+                        <div class="stat-label">Occupancy Rate</div>
+                    </div>
                 </div>
-            </div>
-            
-            <div class="recommendations">
-                <h4><i class="fas fa-lightbulb"></i> Optimization Recommendations</h4>
-                <ul id="recommendationsList"></ul>
             </div>
         </div>
 
-        <!-- Messages -->
-        <div id="messageContainer" class="message-container"></div>
+        <div class="recommendations-container">
+            <h3><i class="fas fa-lightbulb"></i> Optimization Recommendations</h3>
+            <ul id="recommendationsList"></ul>
+        </div>
+
+        <div id="messageContainer"></div>
     </div>
 
     <script src="{{ url_for('static', filename='script.js') }}"></script>
